@@ -1,0 +1,3 @@
+geometry_msgs/Point location
+int32 quality
+int32 computation_time

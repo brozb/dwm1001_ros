@@ -1,0 +1,15 @@
+<launch>
+    <arg name="read_freq" value="100"/>
+    <arg name="world_frame" value="world"/>
+    <arg name="publish_tfs" value="true"/>
+
+    <include file="$(find dwm1001c_ros)/launch/tag_node.launch" pass_all_args="true">
+        <arg name="usb_port" value="/dev/ttyACM0"/>
+        <arg name="tag_id" value="5772"/>
+    </include>
+
+    <include file="$(find dwm1001c_ros)/launch/tag_node.launch" pass_all_args="true">
+        <arg name="usb_port" value="/dev/ttyACM1"/>
+        <arg name="tag_id" value="5773"/>
+    </include>
+</launch>

@@ -1,0 +1,15 @@
+<!-- launches one node for the specified tag under namespace /uwb/TAG_ID
+the data from the tag is therefore published on topics /uwb/TAG_ID/distances-->
+
+<launch>
+    <arg name="usb_port" default="/dev/ttyACM0"/>
+    <arg name="tag_id" default="5772"/>
+    <arg name="read_freq" default="100"/>
+    <arg name="world_frame" default="world"/>
+    <arg name="publish_tfs" default="true"/>
+
+    <group ns="uwb/$(arg tag_id)">
+        <node name="uwb_tag$(arg tag_id)" pkg="dwm1001c_ros" type="uwb_tag.py" args="$(arg usb_port) $(arg read_freq)" output="screen" required='true'/>
+        <node name="uwb_pose_publisher$(arg tag_id)" pkg="dwm1001c_ros" type="uwb_pose_publisher.py" args="$(arg world_frame) $(arg tag_id)" output="screen" required='true' if="$(eval arg('publish_tfs') == true)"/>
+    </group>
+</launch>
