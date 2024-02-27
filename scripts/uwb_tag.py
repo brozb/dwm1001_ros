@@ -4,11 +4,16 @@ import rospy
 import sys
 
 from dwm1001c_ros.msg import UWBMeas, Anchor, TagLocation
+from std_msgs.msg import String
 
 
 class UWB_Tag:
     def __init__(self, usb_port: str, freq: float) -> None:
         rospy.init_node("uwb_tag")
+
+        self.sound_pub = rospy.Publisher("/log_sound", String, queue_size=1)
+        rospy.sleep(1.0)
+
         self.usb = usb_port
 
         self.ser = None
@@ -20,14 +25,21 @@ class UWB_Tag:
         self.serial_setup()
         rospy.sleep(0.5)
         if self.ser is not None:
-            self.set_uwb_mode()
+            id = self.set_uwb_mode()
 
-            self.pub1 = rospy.Publisher("distances", UWBMeas, queue_size=1)
-            self.pub2 = rospy.Publisher("pos_estimate", TagLocation, queue_size=1)
+            prefix = "uwb/twr/" + id + "/"
+
+            self.pub1 = rospy.Publisher(prefix + "distances", UWBMeas, queue_size=1)
+            self.pub2 = rospy.Publisher(
+                prefix + "pos_estimate", TagLocation, queue_size=1
+            )
 
             self.tim = rospy.Timer(rospy.Duration(1 / freq), self.read_data)
         else:
             rospy.logfatal("Serial port can not be opened, quitting")
+            s = String("T W R: Serial port can not be opened, quitting")
+            self.sound_pub.publish(s)
+            rospy.signal_shutdown("Cannot open serial port")
 
         self.tim2 = rospy.Timer(rospy.Duration(3), self.test_connection)
         rospy.on_shutdown(self.shutdown)
@@ -37,7 +49,7 @@ class UWB_Tag:
         rospy.sleep(0.2)
         if self.tim is not None:
             self.tim.shutdown()
-            rospy.sleep(0.2)
+            rospy.sleep(0.5)
         if self.ser is not None:
             self.close_serial()
             self.ser.close()
@@ -46,12 +58,16 @@ class UWB_Tag:
     def test_connection(self, _):
         if self.received == 0:
             rospy.logwarn("No data received in the last 3 seconds")
+            s = String("T W R: No data received in the last 3 seconds")
+            self.sound_pub.publish(s)
             self.failures += 1
         else:
             self.received = 0
             self.failures = 0
         if self.failures == 3:
             rospy.logfatal("No data received in the last 9 seconds, quitting")
+            s = String("T W R: No data received in the last 9 seconds, quitting")
+            self.sound_pub.publish(s)
             rospy.signal_shutdown("no data")
 
     def serial_setup(self):
@@ -61,9 +77,13 @@ class UWB_Tag:
                 rospy.loginfo("Serial comm started at : %s" % self.usb)
             else:
                 rospy.logfatal("Can't open %s" % self.usb)
+                s = String("T W R: can't open serial port")
+                self.sound_pub.publish(s)
                 rospy.signal_shutdown("serial communication failed")
         except serial.SerialException:
             rospy.logfatal("Can't open %s" % self.usb)
+            s = String("T W R: can't open serial port")
+            self.sound_pub.publish(s)
             rospy.signal_shutdown("serial communication failed")
 
     def close_serial(self):
@@ -81,9 +101,37 @@ class UWB_Tag:
         rospy.sleep(0.5)
         self.ser.write(b"\r")
         rospy.sleep(0.5)
+        # obtain the ID
+        self.ser.write(b"si\r")
+        rospy.sleep(0.5)
+        id = ""
+        while not rospy.is_shutdown():
+            d = self.read_serial()
+            if d is None:
+                rospy.logerror("Communication compromised, trying to reset the port")
+                self.ser = self.serial_setup()
+            if len(d) > 3 and d[2].decode("utf-8")[0:3] == "cfg":
+                # the line with the module label, label is the last field (e.g. label=DW5722)
+                id = d[-1].decode("utf-8")[-4:]
+                rospy.loginfo("The tag has ID %s" % id)
+                id_mod = ""
+                for i in range(len(id) - 1):
+                    id_mod += id[i] + " "
+                id_mod += id[-1]
+                s = String("T W R: connected to tag %s" % id_mod)
+                self.sound_pub.publish(s)
+                break
+            rospy.sleep(0.01)
+        if len(id) == 0:
+            rospy.logerr("ID retrieval failed")
+            s = String("T W R: cannot retrieve the ID of the module")
+            self.sound_pub.publish(s)
+            rospy.signal_shutdown("Cannot retrieve the module ID")
+        rospy.sleep(0.1)
         self.ser.write(b"les\r")
         rospy.sleep(0.5)
         rospy.loginfo("Setup done")
+        return id
 
     def read_serial(self):
         if self.ser.is_open:
@@ -91,6 +139,8 @@ class UWB_Tag:
                 raw_data = self.ser.readline()
             except serial.SerialException as ex:
                 rospy.logfatal("Serial exception [%s]" % ex)
+                s = String("T W R: serial exception")
+                self.sound_pub.publish(s)
                 rospy.signal_shutdown("Connection failed")
             data = raw_data.split()
             return data
@@ -152,6 +202,8 @@ class UWB_Tag:
                     break
                 else:
                     rospy.logerr("Unknown message from the tag [%s]" % (data))
+            if len(data) == 0:
+                rospy.logwarn("Empty message received")
             if len(meas.measurements) == 0 and not no_warn:
                 rospy.logwarn("Message with no range data, received:[%s]" % str(data))
             self.pub1.publish(meas)
