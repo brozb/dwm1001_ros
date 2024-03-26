@@ -1,5 +1,5 @@
-<!-- launches one node for the specified tag under namespace /uwb/twr/TAG_ID
-the data from the tag is therefore published on topics /uwb/twr/TAG_ID/distances-->
+<!-- launches one node for the specified tag,
+the data from the tag is published on topic ID_[LABEL]/distances-->
 
 <launch>
     <arg name="usb_port" default="/dev/ttyACM0"/>

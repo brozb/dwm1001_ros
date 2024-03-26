@@ -15,11 +15,6 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
 )
 
-################################################
-## Declare ROS messages, services and actions ##
-################################################
-
-## Generate messages in the 'msg' folder
 add_message_files(
   FILES
   Anchor.msg
@@ -27,19 +22,11 @@ add_message_files(
   UWBMeas.msg
 )
 
-## Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
   geometry_msgs  std_msgs
 )
 
-################################################
-## Declare ROS dynamic reconfigure parameters ##
-################################################
-
-###################################
-## catkin specific configuration ##
-###################################
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES sensor_tests
@@ -47,21 +34,12 @@ catkin_package(
 #  DEPENDS system_lib
 )
 
-###########
-## Build ##
-###########
+catkin_install_python(PROGRAMS
+    scripts/uwb_tag.py
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
 )
-
-#############
-## Install ##
-#############
-
-#############
-## Testing ##
-#############
