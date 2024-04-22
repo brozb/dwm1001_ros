@@ -3,7 +3,7 @@ import serial
 import rospy
 import sys
 
-from dwm1001c_ros.msg import UWBMeas, Anchor, TagLocation
+from dwm1001_ros.msg import UWBMeas, Anchor, TagLocation
 from std_msgs.msg import String
 
 

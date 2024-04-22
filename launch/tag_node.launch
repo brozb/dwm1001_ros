@@ -8,7 +8,7 @@ the data from the tag is published on topic ID_[LABEL]/distances-->
     <arg name="publish_tfs" default="true"/>
 
     <group>
-        <node name="$(anon uwb_tag)" pkg="dwm1001c_ros" type="uwb_tag.py" args="$(arg usb_port) $(arg read_freq)" output="screen" required='true'/>
-        <node name="$(anon uwb_pose_publisher)" pkg="dwm1001c_ros" type="uwb_pose_publisher.py" args="$(arg world_frame) TODO" output="screen" required='true' if="$(eval arg('publish_tfs') == true)"/>
+        <node name="$(anon uwb_tag)" pkg="dwm1001_ros" type="uwb_tag.py" args="$(arg usb_port) $(arg read_freq)" output="screen" required='true'/>
+        <node name="$(anon uwb_pose_publisher)" pkg="dwm1001_ros" type="uwb_pose_publisher.py" args="$(arg world_frame) TODO" output="screen" required='true' if="$(eval arg('publish_tfs') == true)"/>
     </group>
 </launch>

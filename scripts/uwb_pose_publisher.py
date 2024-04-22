@@ -4,7 +4,7 @@ import tf2_ros
 import sys
 
 from geometry_msgs.msg import TransformStamped, Quaternion
-from dwm1001c_ros.msg import UWBMeas, TagLocation
+from dwm1001_ros.msg import UWBMeas, TagLocation
 
 
 class UWB_Pose:
