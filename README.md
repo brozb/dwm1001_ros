@@ -11,3 +11,7 @@ The second node is an example of using a single launch file for multiple tags.
 
 The launch file provides the option (argument `publish_tfs`) to publish the estimated position of the tag with respect to the anchors as a tf2 frame. The position of the anchors is taken
 from the messages received by the tag. For correct functioning of the frames publishing, it is necessary to set the fixed position of each tag through the app or UART interface.
+
+The driver is capable of restoring the connection if it is temporarily lost (for example due to vibrations), it is recommended to set udev rule for each UWB module (each of them has a different serial number):
+
+`ACTION=="add", ENV{ID_VENDOR_ID}=="1366", ENV{ID_MODEL_ID}="0105", ENV{ID_SERIAL_SHORT}=="000760166638", SYMLINK+="ttyACM_uwbc694"`
