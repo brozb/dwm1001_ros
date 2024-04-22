@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 import rospy
 import tf2_ros
 import sys
@@ -8,7 +8,7 @@ from dwm1001_ros.msg import UWBMeas, TagLocation
 
 
 class UWB_Pose:
-    def __init__(self, world_frame: str, tag_id: str) -> None:
+    def __init__(self, world_frame, tag_id):
         rospy.init_node("uwb_pose_publisher")
 
         self.world = world_frame
@@ -18,8 +18,8 @@ class UWB_Pose:
         self.broadcaster1 = tf2_ros.StaticTransformBroadcaster()
         self.broadcaster2 = tf2_ros.TransformBroadcaster()
 
-        self.subs1 = rospy.Subscriber("distances", UWBMeas, queue_size=1)
-        self.subs2 = rospy.Subscriber("pos_estimate", TagLocation, queue_size=1)
+        self.subs1 = rospy.Subscriber("distances", UWBMeas, self.add_anchors, queue_size=1)
+        self.subs2 = rospy.Subscriber("pos_estimate", TagLocation, self.publish_estimate, queue_size=1)
         rospy.on_shutdown(self.shutdown)
 
     def shutdown(self):
@@ -27,7 +27,7 @@ class UWB_Pose:
         self.subs2.unregister()
         rospy.sleep(0.2)
 
-    def add_anchors(self, msg: UWBMeas):
+    def add_anchors(self, msg):
         for an in msg.measurements:
             if an.id not in self.added:
                 rospy.loginfo("Adding new anchor with ID %s" % an.id)
@@ -43,7 +43,7 @@ class UWB_Pose:
 
                 self.broadcaster1.sendTransform(tf)
 
-    def publish_estimate(self, msg: TagLocation):
+    def publish_estimate(self, msg):
         tf = TransformStamped()
         tf.header.frame_id = self.world
         tf.header.stamp = rospy.Time.now()
